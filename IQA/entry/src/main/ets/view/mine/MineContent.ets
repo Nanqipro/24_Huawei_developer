@@ -24,7 +24,7 @@ export default struct MineContent {
             .width(66)
             .objectFit(ImageFit.Contain)
             .margin({top: 71})
-          Text('南昌大学《随便搞一个》队')
+          Text('南昌大学《勇敢面队》')
             .fontSize(20)
             .margin({bottom: 6})
         }
@@ -36,13 +36,15 @@ export default struct MineContent {
       Column() {
         this.item('个人资料')
         Divider()
-        this.item('检测更新')
+        this.item('历史记录')
         Divider()
-        this.item('关于')
+        this.item('关于我们')
         Divider()
       }
       .width('90%')
     }
+    // .backgroundImage($r('app.media.car_background'))
+    // .backgroundImageSize({ width: '100%', height: 300 })
     .width('100%')
     .height('100%')
   }

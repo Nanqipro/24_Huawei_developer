@@ -185,7 +185,7 @@ export default struct TaskAddDialog {
         fs.closeSync(resultPhoto);
         fs.closeSync(fileTemp);
         const httpRequest = http.createHttp();
-        httpRequest.request('https://infer-modelarts-cn-southwest-2.myhuaweicloud.com/v1/infers/0b1e4db5-ead9-4fd3-b0b3-3c97f11be574', {
+        httpRequest.request('https://infer-modelarts-cn-southwest-2.myhuaweicloud.com/v1/infers/0b1e4db5-ead9-4fd3-b0b3-3c97f11be754', {
           method: http.RequestMethod.POST,
           header: {
             'content-Type': 'multipart/form-data',
@@ -321,7 +321,7 @@ build() {
 
       Column({ space: 10 }) {
         Button() {
-          Text('拍摄')
+          Text('摄像头监测')
             .fontSize(18)
             .fontWeight(600)
         }
@@ -332,7 +332,7 @@ build() {
         })
 
         Button() {
-          Text('本地读取检测并写入图片')
+          Text('本地视频上传')
             .fontSize(18)
             .fontWeight(600)
         }
@@ -360,17 +360,17 @@ build() {
         //   // this.pickPhotoBtn()
         // })
 
-        Button() {
-          Text('从相册选择')
-            .fontSize(18)
-            .fontWeight(600)
-        }
-        .width('80%')
-        .height(50)
-        .backgroundColor("#ffd0d0d0")
-        .onClick(() => {
-         this.onConfirm()
-        })
+        // Button() {
+        //   Text('从相册选择')
+        //     .fontSize(18)
+        //     .fontWeight(600)
+        // }
+        // .width('80%')
+        // .height(50)
+        // .backgroundColor("#ffd0d0d0")
+        // .onClick(() => {
+        //  this.onConfirm()
+        // })
 
         Button() {
           Text('取消')

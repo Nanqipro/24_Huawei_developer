@@ -42,7 +42,7 @@ struct MainIndex {
       //     $r('app.media.ic_tabs_achievement_sel'),
       //     "API测试"
       //   ))
-      // // 页面3
+      // 页面3
       TabContent() {
         MineContent()
       }

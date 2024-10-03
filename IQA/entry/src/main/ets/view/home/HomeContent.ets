@@ -58,10 +58,10 @@ export default struct HomeContent {
   build() {
     Column() {
       Column() {
-        Text('工业产品质量检测')
-          .fontSize(25)
-          .fontWeight(600)
-          .margin({ top: 10, bottom: 100, left: 20 })
+        Text('疲劳驾驶监测系统')
+          .fontSize(30)
+          .fontWeight(800)
+          .margin({ top: 10, bottom: 100, left: 60 })
         Row() {
           Text(DateUtil.formatDate(this.date))
             .fontSize(15)
@@ -79,7 +79,7 @@ export default struct HomeContent {
           this.controller_1.open()
         })
       }
-      .backgroundImage($r('app.media.home_bg'))
+      .backgroundImage($r('app.media.car_background'))
       .backgroundImageSize({ width: '100%', height: 300 })
       .width('100%')
       .height('40%')
@@ -88,7 +88,7 @@ export default struct HomeContent {
 
       Stack() {
         Column() {
-          Text('检测任务列表')
+          Text('')
             .fontSize(20)
             .fontWeight(700)
             .margin({ left: 20, top: 20, bottom: 10 })
@@ -111,7 +111,7 @@ export default struct HomeContent {
                         .fontWeight(600)
                         .opacity(0.8)
                       Blank(10)
-                      Button('查看检测结果')
+                      Button('查看驾驶疲劳状况')
                         .backgroundColor(Color.Blue)
                     }
                     .width('100%')
@@ -134,7 +134,7 @@ export default struct HomeContent {
               Image($r('app.media.ic_no_data'))
                 .width(350)
                 .height(220)
-              Text('暂无检测任务，请添加任务')
+              Text('暂无驾驶记录，请开始监测')
                 .fontSize(20)
                 .opacity(0.4)
             }
