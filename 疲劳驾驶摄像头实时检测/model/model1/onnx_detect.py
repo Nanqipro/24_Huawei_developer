@@ -2,6 +2,8 @@ import cv2
 import random
 import numpy as np
 import onnxruntime as ort
+# import sys
+# sys.path.append('../run')  # 添加模块所在目录到系统路径
 import our_tool as our_tool
  
 # names = ["face", "phone"]
