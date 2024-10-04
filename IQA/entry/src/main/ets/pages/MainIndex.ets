@@ -1,5 +1,6 @@
 import HomeContent from '../view/home/HomeContent'
 import MineContent from '../view/mine/MineContent'
+import FuncContent from '../view/function/FuncContent'
 
 
 @Entry
@@ -33,21 +34,21 @@ struct MainIndex {
           "主页"
         ))
       // 页面2
-      // TabContent(){
-      //   TaskContent()
-      // }
-      //   .tabBar(this.TabBarBuilder(
-      //     1,
-      //     $r('app.media.ic_tabs_achievement_normal'),
-      //     $r('app.media.ic_tabs_achievement_sel'),
-      //     "API测试"
-      //   ))
+      TabContent(){
+        FuncContent()
+      }
+        .tabBar(this.TabBarBuilder(
+          1,
+          $r('app.media.ic_tabs_func_normal'),
+          $r('app.media.ic_tabs_func_sel'),
+          "驾驶监测"
+        ))
       // 页面3
       TabContent() {
         MineContent()
       }
         .tabBar(this.TabBarBuilder(
-          1,
+          2,
           $r('app.media.ic_tabs_mine_normal'),
           $r('app.media.ic_tabs_mine_sel'),
           "个人"

@@ -94,8 +94,6 @@ def main():
         if ret:
             if warning_flag[0]:
                 cv2.putText(frame, "Warning: do not use phone", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-            # elif warning_flag[0]:
-            #     cv2.putText(frame, "Warning: do not look away", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
             cv2.imshow('Live Stream', frame)
             frame_queue.append(frame)
 

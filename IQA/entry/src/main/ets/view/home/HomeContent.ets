@@ -145,7 +145,7 @@ export default struct HomeContent {
         .height('100%')
         .alignItems(HorizontalAlign.Start)
 
-        AddButton({ clickAction: (): void => this.addTask() })
+        // AddButton({ clickAction: (): void => this.addTask() })
       }
       .width('100%')
       .height('100%')

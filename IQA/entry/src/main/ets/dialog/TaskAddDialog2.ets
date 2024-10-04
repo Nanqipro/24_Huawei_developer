@@ -13,10 +13,14 @@ import { http } from '@kit.NetworkKit';
 import { image } from '@kit.ImageKit';
 import resourceManager from '@ohos.resourceManager'
 import PermissionsUtil from '../utils/PermissionsUtil'
-import { Permissions } from '@kit.AbilityKit';
+// import { Permissions } from '@kit.AbilityKit';
+import { abilityAccessCtrl, PermissionRequestResult, Permissions } from '@kit.AbilityKit';
 import fs from '@ohos.file.fs';
 import { DetectionResult } from '../viewmodel/resultViemModel'
+import { camera } from '@kit.CameraKit';
+import { common } from '@kit.AbilityKit';
 
+// ...
 @Preview
 @CustomDialog
 @Component
@@ -27,7 +31,16 @@ export default struct TaskAddDialog {
   @State recordItem: RecordItem = ItemModel.getById(this.itemId)
   @State pixelMap: image.PixelMap  | undefined = undefined
   @State uriTemp: string = ''
-  private permissions: Array<Permissions> = ['ohos.permission.WRITE_IMAGEVIDEO','ohos.permission.READ_IMAGEVIDEO']
+  //新模块
+  @State cameraManager: camera.CameraManager | null = null;
+  @State cameraInput: camera.CameraInput | null = null;
+  @State previewOutput: camera.PreviewOutput | null = null;
+  @State captureSession: camera.CaptureSession | null = null;
+  @State imageReceiver: image.ImageReceiver | null = null;
+  @State canvasContext: CanvasRenderingContext2D | null = null;
+
+
+  private permissions: Array<Permissions> = ['ohos.permission.WRITE_IMAGEVIDEO','ohos.permission.READ_IMAGEVIDEO','ohos.permission.CAMERA','ohos.permission.WRITE_MEDIA']
   private imageUri: string = ''
 
   controller: CustomDialogController
@@ -64,6 +77,64 @@ export default struct TaskAddDialog {
     PermissionsUtil.checkPermissions(this.permissions)
   }
 
+  //相机整体获取
+  async startCameraMonitoring() {
+    const context: common.BaseContext = getContext(this);
+    this.cameraManager = await this.getCameraManager(context);
+    if (this.cameraManager) {
+      await this.onCameraStatus(this.cameraManager);
+      const cameraDevices = await this.getCameraDevices(this.cameraManager);
+      if (cameraDevices.length > 0) {
+        const cameraDevice = cameraDevices[0]; // 选择第一个摄像头
+        const sceneMode = camera.SceneMode.NORMAL_VIDEO; // 根据需求选择场景模式
+        const outputCapability = await this.getSupportedOutputCapability(
+          cameraDevice,
+          this.cameraManager,
+          sceneMode
+        );
+        if (outputCapability) {
+          // 在此可以继续配置摄像头预览和图像捕获
+          // 例如，初始化 captureSession，添加输入和输出，启动预览等
+          // 请根据您的具体需求添加相应的逻辑
+        }
+      }
+    }
+  }
+
+  //摄像头调用
+  async getCameraManager(context: common.BaseContext): Promise<camera.CameraManager> {
+    let cameraManager: camera.CameraManager = camera.getCameraManager(context);
+    return cameraManager;
+  }
+
+  //获得相机输入流
+  async getSupportedOutputCapability(cameraDevice: camera.CameraDevice, cameraManager: camera.CameraManager, sceneMode: camera.SceneMode): Promise<camera.CameraOutputCapability | undefined> {
+  // 创建相机输入流
+    let cameraInput: camera.CameraInput | undefined = undefined;
+    try {
+      cameraInput = cameraManager.createCameraInput(cameraDevice);
+    } catch (error) {
+      let err = error as BusinessError;
+      console.error('Failed to createCameraInput errorCode = ' + err.code);
+    }
+    if (cameraInput === undefined) {
+      return undefined;
+    }
+    // 监听cameraInput错误信息
+    cameraInput.on('error', cameraDevice, (error: BusinessError) => {
+      console.error(`Camera input error code: ${error.code}`);
+    });
+    // 打开相机
+    await cameraInput.open();
+    // 获取相机设备支持的输出流能力
+    let cameraOutputCapability: camera.CameraOutputCapability = cameraManager.getSupportedOutputCapability(cameraDevice, sceneMode);
+    if (!cameraOutputCapability) {
+      console.error("cameraManager.getSupportedOutputCapability error");
+      return undefined;
+    }
+    console.info("outputCapability: " + JSON.stringify(cameraOutputCapability));
+    return cameraOutputCapability;
+  }
   // 打包 PixelMap 为 jpg 格式
   async packingPixelMap2Jpg(pixelMap: PixelMap): Promise<ArrayBuffer> {
     const imagePackerApi = image.createImagePacker();
@@ -77,7 +148,33 @@ export default struct TaskAddDialog {
     }
     return imageBuffer;
   }
-
+  //相机列表
+  async getCameraDevices(cameraManager: camera.CameraManager): Promise<camera.CameraDevice[]> {
+    let cameraArray: Array<camera.CameraDevice> = cameraManager.getSupportedCameras();
+    if (cameraArray != undefined && cameraArray.length > 0) {
+      for (let index = 0; index < cameraArray.length; index++) {
+        console.info('cameraId : ' + cameraArray[index].cameraId);  // 获取相机ID
+        console.info('cameraPosition : ' + cameraArray[index].cameraPosition);  // 获取相机位置
+        console.info('cameraType : ' + cameraArray[index].cameraType);  // 获取相机类型
+        console.info('connectionType : ' + cameraArray[index].connectionType);  // 获取相机连接类型
+      }
+      return cameraArray;
+    } else {
+      console.error("cameraManager.getSupportedCameras error");
+      return [];
+    }
+  }
+  //相机监听
+  async onCameraStatus(cameraManager: camera.CameraManager): Promise<void> {
+    cameraManager.on('cameraStatus', (err: BusinessError, cameraStatusInfo: camera.CameraStatusInfo) => {
+      if (err !== undefined && err.code !== 0) {
+        console.error(`Callback Error, errorCode: ${err.code}`);
+        return;
+      }
+      console.info(`camera: ${cameraStatusInfo.camera.cameraId}`);
+      console.info(`status: ${cameraStatusInfo.status}`);
+    });
+  }
   // 在rawfile读取图片
   async getPixelMapByImage():Promise<image.PixelMap>{
     const context : Context = getContext(this);
@@ -229,72 +326,9 @@ export default struct TaskAddDialog {
   });
 }
 
-  // pickPhotoBtn() {
-  //   try {
-  //     let uris: Array<string> = [];
-  //     let PhotoSelectOptions = new picker.PhotoSelectOptions();
-  //     PhotoSelectOptions.MIMEType = picker.PhotoViewMIMETypes.IMAGE_TYPE;
-  //     PhotoSelectOptions.maxSelectNumber = 1;
-  //     let photoPicker = new picker.PhotoViewPicker();
-  //     photoPicker.select(PhotoSelectOptions).then((PhotoSelectResult: picker.PhotoSelectResult) => {
-  //       console.info('photoPicker.select successfully, PhotoSelectResult uri: ' + JSON.stringify(PhotoSelectResult));
-  //       uris = PhotoSelectResult.photoUris;
-  //       let phAccessHelper = photoAccessHelper.getPhotoAccessHelper(context);
-  //       let predicates: dataSharePredicates.DataSharePredicates = new dataSharePredicates.DataSharePredicates();
-  //       // 配置查询条件，使用PhotoViewPicker选择图片返回的uri进行查询
-  //       predicates.equalTo('uri', uris[0]);
-  //       let fetchOptions: photoAccessHelper.FetchOptions = {
-  //         fetchColumns: [],
-  //         predicates: predicates
-  //       };
-  //       phAccessHelper.getAssets(fetchOptions, async (err, fetchResult) => {
-  //         if (fetchResult !== undefined) {
-  //           console.info('fetchResult success');
-  //           let photoAsset: photoAccessHelper.PhotoAsset = await fetchResult.getFirstObject();
-  //           if (photoAsset !== undefined) {
-  //             // 获取缩略图
-  //             photoAsset.getThumbnail((err, pixelMap) => {
-  //               if (err == undefined) {
-  //                 console.info('getThumbnail successful ' + JSON.stringify(pixelMap));
-  //               } else {
-  //                 console.error('getThumbnail fail', err);
-  //               }
-  //             });
-  //             console.info('photoAsset.displayName : ' + photoAsset.displayName);
-  //           }
-  //         } else {
-  //           console.error(`fetchResult fail with error: ${err.code}, ${err.message}`);
-  //         }
-  //       });
-  //     }).catch((err: BusinessError) => {
-  //       console.error('photoPicker.select failed with err: ' + JSON.stringify(err));
-  //     });
-  //   } catch (error) {
-  //     let err: BusinessError = error as BusinessError;
-  //     console.error('photoPicker failed with err: ' + JSON.stringify(err));
-  //   }
-  // }
-
-  // async handleImageUpload() {
-  //   try {
-  //     let uri = await this.selectImage(); // 这是你选择图片的函数
-  //
-  //     // 上传图片，返回JSON字符串
-  //     // 通过类型断言将解析后的JSON字符串转换为DetectionResultJSON类型
-  //     let resultJson: string = await this.uploadImage(uri);
-  //     let detectionResult: DetectionResultJSON = RecordResult.fromJson(resultJson);
-  //
-  //     // 现在你可以使用 detectionResult 对象来访问检测结果
-  //     Logger.debug('Detection Classes:', detectionResult.detectionClasses);
-  //     Logger.debug('Detection Boxes:', detectionResult.detectionBoxes);
-  //     Logger.debug('Detection Scores:', detectionResult.detectionScores);
-  //   } catch (error) {
-  //     Logger.debug('处理图片上传失败:', error);
-  //   }
-  // }
-
 build() {
     Column() {
+
       Row() {
         Text(DateUtil.formatDate(this.data))
           .fontSize(20)
@@ -328,7 +362,28 @@ build() {
         .width('80%')
         .height(50)
         .backgroundColor("#ffd0d0d0")
-        .onClick(() => {
+        // .onClick(() => {
+        //   this.startCameraMonitoring()
+        // })
+        .onClick(async () => {
+          const context = getContext(this);
+          try {
+            let atManager: abilityAccessCtrl.AtManager = abilityAccessCtrl.createAtManager();
+            let context: Context = getContext(this) as common.UIAbilityContext;
+            atManager.requestPermissionsFromUser(context, ['ohos.permission.CAMERA'], (err: BusinessError, data: PermissionRequestResult) => {
+              if (err) {
+                console.error(`requestPermissionsFromUser fail, err->${JSON.stringify(err)}`);
+              } else {
+                this.startCameraMonitoring();
+                console.info('data:' + JSON.stringify(data));
+                console.info('data permissions:' + data.permissions);
+                console.info('data authResults:' + data.authResults);
+                console.info('data dialogShownResults:' + data.dialogShownResults);
+              }
+            });
+          } catch (err) {
+            Logger.error('权限请求错误: ' + err);
+          }
         })
 
         Button() {
@@ -346,31 +401,6 @@ build() {
           this.getPixelMapByImage()
           this.WritePhoto()
         })
-
-        // Button() {
-        //   Text('检测图片写入')
-        //     .fontSize(18)
-        //     .fontWeight(600)
-        // }
-        // .width('80%')
-        // .height(50) // 50
-        // .backgroundColor("#ffd0d0d0")
-        // .onClick(() => {
-        //   // const result: DetectionResult = callModelArtsAPI()
-        //   // this.pickPhotoBtn()
-        // })
-
-        // Button() {
-        //   Text('从相册选择')
-        //     .fontSize(18)
-        //     .fontWeight(600)
-        // }
-        // .width('80%')
-        // .height(50)
-        // .backgroundColor("#ffd0d0d0")
-        // .onClick(() => {
-        //  this.onConfirm()
-        // })
 
         Button() {
           Text('取消')
