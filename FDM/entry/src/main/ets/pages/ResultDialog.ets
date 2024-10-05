@@ -259,9 +259,9 @@ export default struct ResultDialog {
       this.record = params['record']
       this.imageUrl = fileUri.getUriFromPath(this.record.imageUri!)
       this.img = new ImageBitmap(this.imageUrl)
-      if (this.record.detectionResultData?.detection_classes) {
+      if (this.record.detectionResultData?.category) {
         this.thisDetectionId = this.record.id.toString();
-        const detectionClasses = this.record.detectionResultData.detection_classes;
+        const detectionClasses = this.record.detectionResultData.category;
 
         this.detectionText = detectionClasses.toString(); // 直接转换为字符串显示
       }
@@ -295,7 +295,7 @@ export default struct ResultDialog {
             Text() {
               Span('检测id:' + this.thisDetectionId + '的')
               Span($r('app.string.defect_number'))
-              Span(this.record.detectionResultData.detection_classes.toString())
+              Span(this.record.detectionResultData.category.toString())
                 .fontColor(Color.Red)
               Span($r('app.string.Danwei'))
             }
