@@ -18,7 +18,7 @@ export default struct HomeContent {
   date: number = DateUtil.beginTimeOfDay(new Date())
   @State records: RecordVO[] = []
   @State recordPOs: RecordPO[] = []
-  @State record: RecordVO = new RecordVO(0, 0, Date.now(), new RecordItem(0, '', '', '', ''));
+  @State record: RecordVO = new RecordVO(0, 0, Date.now(), new RecordItem(0, '', '', ''));
 
   async aboutToAppear() {
     this.records = await KeepService.selectRecordByDate(this.date)

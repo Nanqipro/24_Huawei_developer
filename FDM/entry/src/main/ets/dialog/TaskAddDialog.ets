@@ -304,8 +304,8 @@ export default struct TaskAddDialog {
               Logger.debug('返回调用代码:' + data.responseCode );
               let detectionResult: DetectionResult = JSON.parse(data.result) as DetectionResult;
               Logger.debug('返回错误类型结果:' + detectionResult.detection_classes);
-              Logger.debug('返回错误位置结果:' + detectionResult.detection_boxes);
-              Logger.debug('返回置信度结果:' + detectionResult.detection_scores);
+              // Logger.debug('返回错误位置结果:' + detectionResult.detection_boxes);
+              // Logger.debug('返回置信度结果:' + detectionResult.detection_scores);
               resolve(detectionResult);
             } else {
               reject('Unexpected data format');
