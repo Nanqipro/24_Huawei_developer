@@ -1,6 +1,6 @@
 import { router } from '@kit.ArkUI'
 import RecordItem from '../../bean/RecordItem';
-import TaskAddDialog from '../../dialog/TaskAddDialog';
+import TaskAddDialog from '../../dialog/TaskAddDialog1';
 import RecordItemModel from '../../model/RecordItemModel';
 
 

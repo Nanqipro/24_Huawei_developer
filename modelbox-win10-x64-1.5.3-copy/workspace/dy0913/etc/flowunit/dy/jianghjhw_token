@@ -1,0 +1,24 @@
+{
+  "auth": {
+    "identity": {
+      "methods": [
+        "password"
+      ],
+      "password": {
+        "user": {
+          "domain": {
+            "name": "hw049220190"
+          },
+          "name": "jianghjhw",
+          "password": "2018jhj611"
+        }
+      }
+    },
+    "scope": {
+      "project": {
+        "id": "adf6a751b5d54f05ae6a84be8a3d912f",
+        "name": "cn-north-4"
+      }
+    }
+  }
+}
