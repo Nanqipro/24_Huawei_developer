@@ -52,8 +52,8 @@ def upload(i):
     remote_user = 'ZZQ'  # 你的目标服务器用户名
     remote_password = 'ZZQ@good114'  # 你的目标服务器密码
 
-    local_file_path = rf'./upload/speech_{i}.wav'  # 你想上传的本地文件路径
-    remote_file_path = '/app/huaweiyun/sichuan/WAV16k/test/'  # 文件在目标服务器上的存储路径
+    local_file_path = rf'./speech_{i}.wav'  # 你想上传的本地文件路径
+    remote_file_path = '/app/huaweiyun/sichuan/WAV16k/input/'  # 文件在目标服务器上的存储路径
     # 调用函数上传文件
     scp_file_through_jump(jump_host, jump_port, jump_user, jump_password,
                           remote_host, remote_port, remote_user, remote_password,
