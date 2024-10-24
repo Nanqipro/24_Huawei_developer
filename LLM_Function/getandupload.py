@@ -89,8 +89,9 @@ def listen_and_record():
                     output_filename = f"speech_{i}.wav"
                     save_audio_wav(audio, output_filename)
                     print(f"已保存语音到 {output_filename}")
-                    upload(i)
+                    # upload(i)
                     i += 1
+                    break
             except sr.WaitTimeoutError:
                 print("没有检测到说话声...")
             except KeyboardInterrupt:
@@ -99,3 +100,5 @@ def listen_and_record():
 
 # 调用函数开始实时监听并截获说话的语句
 listen_and_record()
+
+
