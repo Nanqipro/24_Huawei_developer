@@ -15,9 +15,9 @@ from model1.onnx_detect import ONNX_engine
 import our_tool
 from our_videoReader import VideoReader
 
-from model_service.pytorch_model_service import PTServingBaseService # 提交
-class fatigue_driving_detection(PTServingBaseService): # 提交
-# class fatigue_driving_detection:  # 本地
+# from model_service.pytorch_model_service import PTServingBaseService # 提交
+# class fatigue_driving_detection(PTServingBaseService): # 提交
+class fatigue_driving_detection:  # 本地
     def __init__(self, model_name, model_path):
         self.onnx_model = ONNX_engine(weights_path='v4_c7_320.onnx', size=320)  # 提交！！！！看清楚权重
         self.model_name = model_name
