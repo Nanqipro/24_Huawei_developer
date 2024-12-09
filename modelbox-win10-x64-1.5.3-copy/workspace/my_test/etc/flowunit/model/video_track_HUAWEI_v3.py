@@ -178,7 +178,7 @@ def put_chinese_text_v2(image, text, font_size=30, bold_factor=2):
 
 
 def main():
-    cap = cv2.VideoCapture(2)
+    cap = cv2.VideoCapture(1)
 
     if not cap.isOpened():
         print("Error opening video stream or file")
