@@ -18,6 +18,11 @@ speech_queue = queue.Queue()
 # 用于追踪每种警告的播放次数，初始值为0
 warning_played_count = [0, 0, 0, 0, 0]
 
+# 新增：用于存储最新的人脸坐标和更新时间，并确保线程安全
+latest_face = None
+latest_face_time = 0
+face_lock = threading.Lock()
+
 def speak_warning():
     """从队列中取出文本并朗读"""
     while True:
@@ -35,24 +40,31 @@ def getToken():
     body = {
         "auth": {
             "identity": {
-                "methods": ["password"],
+                "methods": [
+                    "password"
+                ],
                 "password": {
                     "user": {
-                        "domain": {"name": "hid_eb2gnxs55yqdnn_"},
-                        "name": "Czq",
-                        "password": "darling.czq2002"
+                        "domain": {
+                            "name": "hw074922794"
+                        },
+                        "name": "nanqipro",
+                        "password": "8729512929abc"
                     }
                 }
             },
-            "scope": {"project": {"name": "cn-north-4"}}
+            "scope": {
+                "project": {
+                    "name": "cn-north-4"
+                }
+            }
         }
     }
-
     headers = {
         'Content-Type': 'application/json'
     }
     response = requests.post(url, data=json.dumps(body), headers=headers)
-    token = response.headers["X-Subject-Token"]
+    token = response.headers.get("X-Subject-Token", "")
     print(token)
     return token
 
@@ -69,9 +81,8 @@ def save_video_from_frames(frames, output_file="temp_video.mp4"):
     out.release()
     return output_file
 
-
 def upload_video_and_get_result(file_path):
-    url = "https://015c2ea02afc4cf0afbd3935a760adab.apig.cn-north-4.huaweicloudapis.com/v1/infers/d8700113-5c4a-4ee7-b987-18e87ea6062b"
+    url = "https://26c1aa8fc1714f8cbbb4d054f6fa4acc.apig.cn-north-4.huaweicloudapis.com/v1/infers/10ad4dc2-b6fc-44c0-affe-dee8c4da6c52"
     token = getToken()
     headers = {
         'X-Auth-Token': token
@@ -80,13 +91,19 @@ def upload_video_and_get_result(file_path):
         'input_video': open(file_path, 'rb')
     }
     response = requests.post(url, headers=headers, files=files)
-    print(response.json())
-    return response.json()
-
+    try:
+        result = response.json()
+    except json.JSONDecodeError:
+        result = {}
+    print(result)
+    return result
 
 # 异步处理视频保存和分析
 def async_save_and_analyze(frames, warning_flag):
+    global latest_face, latest_face_time
     output_file = save_video_from_frames(frames)
+    if output_file is None:
+        return
     result = upload_video_and_get_result(output_file)
     category = result.get("result", {}).get("category", None)
 
@@ -107,6 +124,15 @@ def async_save_and_analyze(frames, warning_flag):
     else:
         warning_flag[1] = False  # 如果没有检测到违规行为，清除警告
 
+    # 新增：提取最后一个人脸坐标并更新最新人脸和时间
+    faces = result.get("result", {}).get("faces", [])
+    if faces:
+        last_face = faces[-1]
+        top_left = last_face.get("top_left", [0, 0])
+        bottom_right = last_face.get("bottom_right", [0, 0])
+        with face_lock:
+            latest_face = (tuple(top_left), tuple(bottom_right))
+            latest_face_time = time.time()
 
 def put_chinese_text_v1(image, text, position, font_size=30, bold_factor=2):
     # 将 OpenCV 图片转换为 Pillow 图像
@@ -119,22 +145,15 @@ def put_chinese_text_v1(image, text, position, font_size=30, bold_factor=2):
     # 获取文本的尺寸
     text_width, text_height = draw.textsize(text, font=font)
 
-    # # 计算居中位置
-    # image_width, image_height = image_pil.size
-    # position = ((image_width - text_width) // 2, (image_height - text_height) // 2)
-    
     # 计算水平方向的居中位置
     image_width, image_height = image_pil.size
     position_x = (image_width - text_width) // 2
-    
+
     # 计算垂直方向上靠上方的显示位置
     position_y = int(image_height * 0.1)  # 设置为画面高度的10%左右
-    
+
     # 计算文本的起始位置
     position = (position_x, position_y)
-    
-    # # 绘制中文文本
-    # draw.text(position, text, font=font, fill=(255, 0, 0))
 
     # 模拟加粗效果，通过多次绘制文本
     for i in range(bold_factor):
@@ -143,7 +162,6 @@ def put_chinese_text_v1(image, text, position, font_size=30, bold_factor=2):
 
     # 将 Pillow 图像转换回 OpenCV 图像
     return cv2.cvtColor(np.array(image_pil), cv2.COLOR_RGB2BGR)
-
 
 def put_chinese_text_v2(image, text, font_size=30, bold_factor=2):
     # 将 OpenCV 图片转换为 Pillow 图像
@@ -176,7 +194,6 @@ def put_chinese_text_v2(image, text, font_size=30, bold_factor=2):
     # 将 Pillow 图像转换回 OpenCV 图像
     return cv2.cvtColor(np.array(image_pil), cv2.COLOR_RGB2BGR)
 
-
 def main():
     cap = cv2.VideoCapture(2)
 
@@ -195,6 +212,15 @@ def main():
     while True:
         ret, frame = cap.read()
         if ret:
+            # 新增：在绘制警告前绘制人脸矩形框
+            with face_lock:
+                current_time = time.time()
+                # 仅在最新人脸数据在1秒内时绘制
+                if latest_face and (current_time - latest_face_time <= 1):
+                    top_left, bottom_right = latest_face
+                    cv2.rectangle(frame, top_left, bottom_right, (0, 255, 0), 2)  # 绿色矩形框
+
+            # 处理警告文字
             if warning_flag[4]:
                 frame = put_chinese_text_v1(frame, "警告! 请不要左顾右盼!", (50, 50), 30)
                 if warning_played_count[4] < 1:  
